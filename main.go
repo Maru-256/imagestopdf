@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"image"
-	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
+	"sort"
 
 	"github.com/signintech/gopdf"
 )
@@ -15,7 +16,14 @@ func main() {
 		return
 	}
 
-	names, err := ls(os.Args[1])
+	names, err := filepath.Glob(os.Args[1] + "/*")
+	if err != nil {
+		log.Fatal(err)
+	}
+	sort.SliceStable(names, func(i, j int) bool {
+		return len(names[i]) < len(names[j])
+	})
+
 	fp, err := os.Open(names[0])
 	if err != nil {
 		log.Fatal(err)
@@ -42,17 +50,7 @@ func main() {
 	if err := pdf.WritePdf(fmt.Sprintf("%s.pdf", os.Args[1])); err != nil {
 		log.Fatal(err)
 	}
-}
 
-func ls(dir string) ([]string, error) {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	filenames := make([]string, len(files))
-	for i, file := range files {
-		filenames[i] = dir + "/" + file.Name()
-	}
-	return filenames, nil
+	fmt.Println("Press the Enter Key to terminate the console...")
+	fmt.Scanln()
 }
